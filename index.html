@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>DYsT - Download Youtube vs Tiktok</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      overflow-x: hidden;
+      background-color: #f8fafc; /* Slate-50 */
+      color: #1e293b; /* Slate-800 */
+    }
+
+    /* Fixed Bokeh Background */
+    .bokeh-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0; 
+      overflow: hidden;
+      background: #f8fafc;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      /* Reduced blur significantly for sharpness */
+      filter: blur(25px); 
+      opacity: 0.85;
+      will-change: transform;
+      /* Add blend mode for nice overlapping colors */
+      mix-blend-mode: multiply;
+    }
+
+    /* Orb Configurations with Gradients for 3D/Clearer look */
+    .orb-1 {
+      width: 45vw; height: 45vw;
+      top: -15%; left: -10%;
+      /* Purple Gradient */
+      background: radial-gradient(circle at 30% 30%, #e9d5ff, #c084fc);
+      animation: float-complex-1 25s infinite ease-in-out;
+    }
+    
+    .orb-2 {
+      width: 35vw; height: 35vw;
+      bottom: -10%; right: -5%;
+      /* Pink Gradient */
+      background: radial-gradient(circle at 70% 60%, #fbcfe8, #f472b6);
+      animation: float-complex-2 30s infinite ease-in-out reverse;
+    }
+
+    .orb-3 {
+      width: 25vw; height: 25vw;
+      top: 35%; left: 5%;
+      /* Sky Blue Gradient */
+      background: radial-gradient(circle at 40% 40%, #bae6fd, #38bdf8);
+      animation: float-complex-3 28s infinite ease-in-out;
+    }
+
+    .orb-4 {
+      width: 32vw; height: 32vw;
+      top: 5%; right: 10%;
+      /* Teal Gradient */
+      background: radial-gradient(circle at 60% 20%, #99f6e4, #2dd4bf);
+      animation: float-complex-1 32s infinite ease-in-out reverse;
+    }
+
+    .orb-5 {
+      width: 22vw; height: 22vw;
+      bottom: 20%; left: 25%;
+      /* Orange Gradient */
+      background: radial-gradient(circle at 50% 50%, #fed7aa, #fb923c);
+      animation: float-complex-3 24s infinite ease-in-out reverse;
+    }
+    
+    .orb-6 {
+      width: 30vw; height: 30vw;
+      top: 55%; right: 0%;
+      /* Violet Gradient */
+      background: radial-gradient(circle at 20% 80%, #ddd6fe, #a78bfa);
+      animation: float-complex-2 35s infinite ease-in-out;
+    }
+
+    /* Complex paths to simulate random floating */
+    @keyframes float-complex-1 {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(40px, -50px) rotate(10deg); }
+      66% { transform: translate(-20px, 30px) rotate(-5deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    @keyframes float-complex-2 {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-60px, -40px) scale(1.1); }
+      100% { transform: translate(0, 0) scale(1); }
+    }
+
+    @keyframes float-complex-3 {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(30px, 30px); }
+      50% { transform: translate(0, 60px); }
+      75% { transform: translate(-30px, 30px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    /* Glass Scrollbar - Light Mode */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+  </style>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+          console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+      });
+    }
+  </script>
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://esm.sh/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://esm.sh/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://esm.sh/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://esm.sh/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://esm.sh/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://esm.sh/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0?external=rxjs",
+    "@angular/core": "https://esm.sh/@angular/core@^21.0.6?external=rxjs",
+    "@angular/common": "https://esm.sh/@angular/common@^21.0.6?external=rxjs",
+    "@angular/forms": "https://esm.sh/@angular/forms@^21.0.6?external=rxjs",
+    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@^21.0.6?external=rxjs",
+    "@angular/compiler": "https://esm.sh/@angular/compiler@^21.0.6?external=rxjs"
+  }
+}
+</script>
+</head>
+<body>
+  <!-- Container is strictly background -->
+  <div class="bokeh-container">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="orb orb-5"></div>
+    <div class="orb orb-6"></div>
+  </div>
+  <app-root></app-root>
+</body>
+</html>
