@@ -8,7 +8,7 @@
 export const APP_VERSION = {
   major: 1,
   minor: 0,
-  patch: 10,
+  patch: 11,
   
   // Getter để lấy chuỗi phiên bản đầy đủ
   get full(): string {
