@@ -25,19 +25,19 @@ export class AiService {
   private ai: GoogleGenAI | null = null;
   
   // Danh sách Server Cobalt (Mirrors)
-  // Đã cập nhật các instance mới nhất và ổn định
-  // Việc có nhiều domain khác nhau giúp tránh IP Blocking từ phía Youtube/Tiktok
+  // Đã cập nhật: v1.0.18 - Thêm các server mới & server chính thức
   private readonly SERVERS = [
-    'https://cobalt.api.wuk.sh/api/json',       // Instance 1
-    'https://cobalt.casply.com/api/json',       // Instance 2
-    'https://api.server.social/api/json',       // Instance 3
-    'https://api.opensource.wtf/api/json',      // Instance 4
-    'https://cobalt.xyzen.dev/api/json',        // Instance 5
-    'https://cobalt.aur1.st/api/json',          // Instance 6
-    'https://k.joher.com/api/json',             // Instance 7
-    'https://api.wwebs.co/api/json',            // Instance 8
-    'https://cobalt.q1n.dev/api/json',          // Instance 9
-    'https://dl.khub.win/api/json'              // Instance 10
+    'https://cobalt.api.wuk.sh/api/json',       // Stable
+    'https://cobalt.casply.com/api/json',       // Stable
+    'https://api.server.social/api/json',       // Stable
+    'https://api.imp.xyz/api/json',             // New Stable
+    'https://cobalt.xyzen.dev/api/json',        // Fast
+    'https://cobalt.aur1.st/api/json',          // Fast
+    'https://api.wwebs.co/api/json',            // Backup
+    'https://cobalt.q1n.dev/api/json',          // Backup
+    'https://dl.khub.win/api/json',             // Backup
+    'https://cobalt.june07.com/api/json',       // Backup
+    'https://api.cobalt.tools/api/json'         // Official (Strict but reliable)
   ];
 
   constructor() {
@@ -92,9 +92,7 @@ export class AiService {
     // Làm sạch URL
     const cleanUrl = this.cleanUrl(url);
 
-    // CHIẾN LƯỢC TRÁNH IP BLOCKING & CÂN BẰNG TẢI:
-    // Thay vì luôn bắt đầu từ server đầu tiên, chúng ta xáo trộn hoàn toàn danh sách server mỗi lần gọi.
-    // Điều này đảm bảo request được phân tán đều ra các IP khác nhau của các server Cobalt.
+    // Chiến lược: Random hóa danh sách server để cân bằng tải và tránh IP blocking
     const serverList = [...this.SERVERS].sort(() => Math.random() - 0.5);
 
     const body = {
@@ -103,9 +101,8 @@ export class AiService {
       vQuality: '1080',
       aFormat: 'mp3',
       isAudioOnly: type === 'mp3',
-      filenamePattern: 'basic',
-      // Disable metadata để giảm tải xử lý cho server
-      disableMetadata: true 
+      filenamePattern: 'basic'
+      // Đã xóa disableMetadata để tăng tương thích với các server bản cũ
     };
 
     // Thử lần lượt các server
@@ -126,12 +123,12 @@ export class AiService {
           body: JSON.stringify(body),
           signal: controller.signal,
           mode: 'cors',
-          credentials: 'omit'
+          credentials: 'omit',
+          referrerPolicy: 'no-referrer' // Quan trọng: Ẩn nguồn gốc request
         });
 
         clearTimeout(timeoutId);
 
-        // Lỗi HTTP từ server (500, 502, 503...) -> Thử node khác
         if (!response.ok) {
            throw new Error(`HTTP_ERROR_${response.status}`);
         }
@@ -142,15 +139,16 @@ export class AiService {
         if (data.status === 'error') {
             const errText = (data.text || '').toLowerCase();
             
-            // Nếu lỗi là do Link sai hoặc Private -> Dừng luôn, không thử server khác phí thời gian
+            // Lỗi Fatal: Link sai, Private, Deleted -> Dừng ngay
             if (errText.includes('invalid url') || 
                 errText.includes('private') || 
-                errText.includes('doesn\'t exist')) {
+                errText.includes('doesn\'t exist') ||
+                errText.includes('deleted')) {
                 throw new Error('FATAL_INVALID_URL');
             }
             
-            // Nếu lỗi là Rate limit hoặc server bận -> Thử server khác
-            console.warn(`Node ${endpoint} busy/blocked:`, errText);
+            // Các lỗi còn lại (busy, rate limit, processing error) -> Thử server tiếp
+            console.warn(`Node ${endpoint} returned error:`, errText);
             throw new Error(data.text);
         }
         
@@ -170,7 +168,6 @@ export class AiService {
           };
         }
         
-        // Trường hợp lạ: status ok nhưng không có url
         throw new Error('Empty response from node');
 
       } catch (error: any) {
@@ -179,11 +176,10 @@ export class AiService {
 
         // Nếu là lỗi Fatal, ném lỗi ra ngoài ngay lập tức
         if (msg === 'FATAL_INVALID_URL') {
-            throw new Error('Link không tồn tại hoặc quyền riêng tư.');
+            throw new Error('Link không tồn tại, riêng tư hoặc đã bị xóa.');
         }
 
-        // Nếu là lỗi CORS (Failed to fetch) hoặc Timeout -> Log nhẹ và thử node tiếp theo
-        // Đây chính là cách "Auto-Proxy" qua node khác
+        // Tiếp tục thử server tiếp theo
         continue;
       }
     }
@@ -195,9 +191,9 @@ export class AiService {
     const errStr = lastError?.toString().toLowerCase() || '';
 
     if (errStr.includes('fetch') || errStr.includes('network') || errStr.includes('typeerror')) {
-      userMessage += 'Lỗi mạng (CORS). Vui lòng kiểm tra kết nối hoặc thử lại sau.';
+      userMessage += 'Lỗi kết nối tới máy chủ (CORS). Vui lòng thử lại sau vài giây.';
     } else {
-      userMessage += 'Không thể lấy link. Video có thể đã bị chặn IP hoặc xóa.';
+      userMessage += 'Không thể xử lý link này. Vui lòng kiểm tra lại link.';
     }
     
     throw new Error(userMessage);
